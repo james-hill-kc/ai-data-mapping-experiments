@@ -1,0 +1,25 @@
+{
+	"name": "ai-data-mapping-experiments",
+	"version": "1.0.0",
+	"description": "experimenting with mapping inconsistent data points to a consistent format using ai",
+	"main": "index.js",
+	"type": "module",
+	"scripts": {
+		"test": "echo \"Error: no test specified\" && exit 1"
+	},
+	"repository": {
+		"type": "git",
+		"url": "git+https://github.com/james-hill-kc/ai-data-mapping-experiments.git"
+	},
+	"author": "James Hill",
+	"license": "ISC",
+	"bugs": {
+		"url": "https://github.com/james-hill-kc/ai-data-mapping-experiments/issues"
+	},
+	"homepage": "https://github.com/james-hill-kc/ai-data-mapping-experiments#readme",
+	"dependencies": {
+		"compute-cosine-similarity": "^1.1.0",
+		"dotenv": "^16.5.0",
+		"openai": "^5.1.1"
+	}
+}
