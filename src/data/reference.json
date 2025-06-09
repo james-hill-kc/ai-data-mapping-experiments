@@ -1,0 +1,14 @@
+[
+	"absence, planned",
+	"absence, unplanned",
+	"customer facing time, phone inbound",
+	"customer facing time, phone outbound",
+	"customer facing time, web chat",
+	"customer facing time, social media",
+	"holiday, holiday",
+	"holiday, bank holiday",
+	"holiday, emergency",
+	"planned event, callback",
+	"planned event, coaching",
+	"planned event, meeting"
+]

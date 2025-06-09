@@ -1,14 +1,14 @@
 [
   {
-    "input": "planned time off",
-    "mappedOutput": "absence, planned",
+    "input": "vacation",
+    "mappedOutput": "holiday, holiday",
     "source": "embedding",
-    "confidence": 0.6139244453109944,
+    "confidence": 0.6628442880062098,
     "humanReviewRequired": true
   },
   {
-    "input": "customer service call outgoing",
-    "mappedOutput": "customer facing time, phone outbound",
+    "input": "unplanned absence",
+    "mappedOutput": "absence, unplanned",
     "source": "llm",
     "confidence": 1,
     "humanReviewRequired": false
@@ -21,17 +21,17 @@
     "humanReviewRequired": false
   },
   {
-    "input": "department meeting",
-    "mappedOutput": "planned event, meeting",
+    "input": "incoming telephone service",
+    "mappedOutput": "customer facing time, phone inbound",
     "source": "embedding",
-    "confidence": 0.5134679304917621,
+    "confidence": 0.5708437579325341,
     "humanReviewRequired": true
   },
   {
-    "input": "unplanned absence",
-    "mappedOutput": "absence, unplanned",
-    "source": "llm",
-    "confidence": 1,
-    "humanReviewRequired": false
+    "input": "complaint handling",
+    "mappedOutput": "customer facing time, web chat",
+    "source": "embedding",
+    "confidence": 0.3944425162818291,
+    "humanReviewRequired": true
   }
 ]

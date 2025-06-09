@@ -5,20 +5,7 @@ import { readFile, writeFile } from "fs/promises";
 
 const INPUT_FILE_PATH = "./src/data/input.json";
 const OUTPUT_FILE_PATH = "./src/data/output.json";
-const CANONICAL_ACTIVITIES = [
-	"absence, planned",
-	"absence, unplanned",
-	"customer facing time, phone inbound",
-	"customer facing time, phone outbound",
-	"customer facing time, web chat",
-	"customer facing time, social media",
-	"holiday, holiday",
-	"holiday, bank holiday",
-	"holiday, emergency",
-	"planned event, callback",
-	"planned event, coaching",
-	"planned event, meeting",
-];
+const REFERENCE_FILE_PATH = "./src/data/reference.json";
 
 const HIGH_CONFIDENCE_THRESHOLD = 0.9;
 const REVIEW_THRESHOLD = 0.7;
@@ -65,13 +52,13 @@ Respond in JSON format:
 	}
 }
 
-async function mapEntry(inputEntry) {
+async function mapEntry(inputEntry, referenceData) {
 	const inputEmbedding = await getEmbedding(inputEntry);
 
 	let bestMatch = null;
 	let bestScore = -1;
 
-	for (const activity of CANONICAL_ACTIVITIES) {
+	for (const activity of referenceData) {
 		const activityEmbedding = await getEmbedding(activity);
 		const score = cosineSimilarity(inputEmbedding, activityEmbedding);
 		if (score > bestScore) {
@@ -107,7 +94,7 @@ async function mapEntry(inputEntry) {
 			"score is below high confidence threshold but above review threshold, using LLM for classification"
 		);
 
-		const llmResult = await classifyWithLLM(inputEntry, CANONICAL_ACTIVITIES);
+		const llmResult = await classifyWithLLM(inputEntry, referenceData);
 
 		console.log(
 			`LLM match: "${llmResult.match}" with confidence ${llmResult.confidence}`
@@ -144,10 +131,10 @@ async function mapEntry(inputEntry) {
 	return mappingResult;
 }
 
-async function processEntry(input) {
+async function processEntry(input, referenceData) {
 	console.log(`Processing entry: "${input}"`);
 
-	const result = await mapEntry(input);
+	const result = await mapEntry(input, referenceData);
 
 	if (result.type) {
 		console.log(
@@ -169,12 +156,15 @@ async function processEntry(input) {
 async function processInputFile() {
 	console.log("Processing input file...");
 
+	const rawReferenceData = await readFile(REFERENCE_FILE_PATH, "utf-8");
+	const referenceData = JSON.parse(rawReferenceData);
+
 	const rawData = await readFile(INPUT_FILE_PATH, "utf-8");
 	const jsonData = JSON.parse(rawData);
 
 	const mappedData = await Promise.all(
 		jsonData.map(async (item) => {
-			return await processEntry(item);
+			return await processEntry(item, referenceData);
 		})
 	);
 
