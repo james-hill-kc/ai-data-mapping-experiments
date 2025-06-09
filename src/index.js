@@ -1,7 +1,6 @@
 import dotenv from "dotenv";
 import OpenAI from "openai";
 import cosineSimilarity from "compute-cosine-similarity";
-import readline from "node:readline";
 import { readFile, writeFile } from "fs/promises";
 
 const INPUT_FILE_PATH = "./src/data/input.json";
@@ -185,16 +184,3 @@ async function processInputFile() {
 }
 
 await processInputFile();
-
-// const rl = readline.createInterface({
-// 	input: process.stdin,
-// 	output: process.stdout,
-// });
-
-// rl.question("Enter unmapped activity: ", async (input) => {
-// 	console.log(`You entered: ${input}`);
-
-// 	await processEntry(input);
-
-// 	rl.close();
-// });

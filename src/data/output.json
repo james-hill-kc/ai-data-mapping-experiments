@@ -3,7 +3,7 @@
     "input": "planned time off",
     "mappedOutput": "absence, planned",
     "source": "embedding",
-    "confidence": 0.6139585328417055,
+    "confidence": 0.6139244453109944,
     "humanReviewRequired": true
   },
   {
