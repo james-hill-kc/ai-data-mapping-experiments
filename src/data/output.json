@@ -1,0 +1,37 @@
+[
+  {
+    "input": "planned time off",
+    "mappedOutput": "absence, planned",
+    "source": "embedding",
+    "confidence": 0.6139585328417055,
+    "humanReviewRequired": true
+  },
+  {
+    "input": "customer service call outgoing",
+    "mappedOutput": "customer facing time, phone outbound",
+    "source": "llm",
+    "confidence": 1,
+    "humanReviewRequired": false
+  },
+  {
+    "input": "bank holiday",
+    "mappedOutput": "holiday, bank holiday",
+    "source": "llm",
+    "confidence": 1,
+    "humanReviewRequired": false
+  },
+  {
+    "input": "department meeting",
+    "mappedOutput": "planned event, meeting",
+    "source": "embedding",
+    "confidence": 0.5134679304917621,
+    "humanReviewRequired": true
+  },
+  {
+    "input": "unplanned absence",
+    "mappedOutput": "absence, unplanned",
+    "source": "llm",
+    "confidence": 1,
+    "humanReviewRequired": false
+  }
+]

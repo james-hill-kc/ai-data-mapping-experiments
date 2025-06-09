@@ -2,22 +2,30 @@ import dotenv from "dotenv";
 import OpenAI from "openai";
 import cosineSimilarity from "compute-cosine-similarity";
 import readline from "node:readline";
+import { readFile, writeFile } from "fs/promises";
 
-dotenv.config();
-
-const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
-
-// Canonical reference activity types
-const activities = [
-	"Inventory Check",
-	"Customer Support",
-	"Staff Meeting",
-	"Cleaning Duty",
-	"Cash Register Operation",
+const INPUT_FILE_PATH = "./src/data/input.json";
+const OUTPUT_FILE_PATH = "./src/data/output.json";
+const CANONICAL_ACTIVITIES = [
+	"absence, planned",
+	"absence, unplanned",
+	"customer facing time, phone inbound",
+	"customer facing time, phone outbound",
+	"customer facing time, web chat",
+	"customer facing time, social media",
+	"holiday, holiday",
+	"holiday, bank holiday",
+	"holiday, emergency",
+	"planned event, callback",
+	"planned event, coaching",
+	"planned event, meeting",
 ];
 
-const HIGH_CONFIDENCE_THRESHOLD = 0.92;
-const REVIEW_THRESHOLD = 0.8;
+const HIGH_CONFIDENCE_THRESHOLD = 0.9;
+const REVIEW_THRESHOLD = 0.7;
+
+dotenv.config();
+const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
 async function getEmbedding(text) {
 	const res = await openai.embeddings.create({
@@ -64,7 +72,7 @@ async function mapEntry(inputEntry) {
 	let bestMatch = null;
 	let bestScore = -1;
 
-	for (const activity of activities) {
+	for (const activity of CANONICAL_ACTIVITIES) {
 		const activityEmbedding = await getEmbedding(activity);
 		const score = cosineSimilarity(inputEmbedding, activityEmbedding);
 		if (score > bestScore) {
@@ -77,50 +85,116 @@ async function mapEntry(inputEntry) {
 		`Embedding match: "${bestMatch}" with score ${bestScore.toFixed(3)}`
 	);
 
+	const mappingResult = {
+		input: inputEntry,
+		mappedOutput: bestMatch,
+		source: "embedding",
+		confidence: bestScore,
+		humanReviewRequired: true,
+	};
+
 	if (bestScore >= HIGH_CONFIDENCE_THRESHOLD) {
-		return { type: bestMatch, source: "embedding", confidence: bestScore };
+		console.log(
+			"score is above high confidence threshold, no LLM review required"
+		);
+
+		mappingResult.humanReviewRequired = false;
+
+		return mappingResult;
 	}
 
 	if (bestScore >= REVIEW_THRESHOLD) {
-		const llmResult = await classifyWithLLM(inputEntry, activities);
+		console.log(
+			"score is below high confidence threshold but above review threshold, using LLM for classification"
+		);
+
+		const llmResult = await classifyWithLLM(inputEntry, CANONICAL_ACTIVITIES);
+
 		console.log(
 			`LLM match: "${llmResult.match}" with confidence ${llmResult.confidence}`
 		);
+
 		if (llmResult.confidence >= HIGH_CONFIDENCE_THRESHOLD) {
-			return {
-				type: llmResult.match,
-				source: "llm",
-				confidence: llmResult.confidence,
-			};
+			console.log(
+				"LLM review score is above high confidence threshold, no human review required"
+			);
+
+			mappingResult.mappedOutput = llmResult.match;
+			mappingResult.source = "llm";
+			mappingResult.confidence = llmResult.confidence;
+			mappingResult.humanReviewRequired = false;
+
+			return mappingResult;
 		} else {
-			return { type: null, source: "review", confidence: llmResult.confidence };
+			console.log(
+				"LLM review score is below high confidence threshold, human review required"
+			);
+
+			mappingResult.source = "llm";
+			mappingResult.humanReviewRequired = true;
+
+			if (llmResult.confidence >= mappingResult.confidence) {
+				mappingResult.mappedOutput = llmResult.match;
+				mappingResult.confidence = llmResult.confidence;
+			}
+
+			return mappingResult;
 		}
 	}
 
-	return { type: null, source: "review", confidence: bestScore };
+	return mappingResult;
 }
 
-const rl = readline.createInterface({
-	input: process.stdin,
-	output: process.stdout,
-});
-
-rl.question("Enter unmapped activity: ", async (input) => {
-	console.log(`You entered: ${input}`);
+async function processEntry(input) {
+	console.log(`Processing entry: "${input}"`);
 
 	const result = await mapEntry(input);
 
 	if (result.type) {
 		console.log(
-			`✅ Mapped to: ${result.type} (via ${
-				result.source
-			}, confidence: ${result.confidence.toFixed(2)})`
+			`"${input}" mapped to: ${
+				result.type
+			} (confidence: ${result.confidence.toFixed(2)})`
 		);
 	} else {
 		console.log(
-			`⚠️ Sent for review (confidence: ${result.confidence.toFixed(2)})`
+			`"${input}" mapped to: ${
+				result.type
+			} and flagged for review (confidence: ${result.confidence.toFixed(2)})`
 		);
 	}
 
-	rl.close();
-});
+	return result;
+}
+
+async function processInputFile() {
+	console.log("Processing input file...");
+
+	const rawData = await readFile(INPUT_FILE_PATH, "utf-8");
+	const jsonData = JSON.parse(rawData);
+
+	const mappedData = await Promise.all(
+		jsonData.map(async (item) => {
+			return await processEntry(item);
+		})
+	);
+
+	console.log("Mapping complete. Writing results to output file...");
+
+	await writeFile(OUTPUT_FILE_PATH, JSON.stringify(mappedData, null, 2));
+}
+
+await processInputFile();
+
+// const rl = readline.createInterface({
+// 	input: process.stdin,
+// 	output: process.stdout,
+// });
+
+// rl.question("Enter unmapped activity: ", async (input) => {
+// 	console.log(`You entered: ${input}`);
+
+// 	await processEntry(input);
+
+// 	rl.close();
+// });
